@@ -1,7 +1,7 @@
 import sys
 
 def valid_coordinates(r1, c1):
-    return (0 <= r1) && (r1 < rows) && (0 <= c1) && (c1 < columns)
+    return (0 <= r1) and (r1 < rows) and (0 <= c1) and (c1 < columns)
 
 def valid_square(r, c, s):
     corners = [(r + a*s, c + b*s) for a in [-1,1] for b in [-1,1]]
@@ -24,29 +24,29 @@ image = [[0 for c in range(columns)] for r in range(rows)]
 num_pixels = 0
 
 for r in range(rows):
-    current_line = image_file.readline.split()
+    current_line = image_file.readline().rstrip()
     for c in range(columns):
-        if current_line[i] == '#':
+        if current_line[c] == '#':
             image[r][c] = 1
             num_pixels = num_pixels + 1
 
 # Check with the solution
 solution_file = open(path_solution, 'r')
-num_commands = int(solution_file.readline.split())
+num_commands = int(solution_file.readline().rstrip())
 
 
 valid_solution = True
 painted_image = [[0 for c in range(columns)] for r in range(rows)]
 
 for i in range(num_commands):
-    command = solution_file.readline.split()
+    command = solution_file.readline().split()
     if command[0] == 'PAINT_SQUARE':
         if not len(command) == 4:
             print(command + " in line " + str(i+2) + " is not a valid command!")
             valid_solution = False
         else:
             R, C, S = map(int, command[1:4])
-            if not valid_coordinates(R, C, S):
+            if not valid_square(R, C, S):
                 print(command + " in line " + str(i+2) + " is not a valid command!")
                 valid_solution = False
             else:
@@ -86,13 +86,13 @@ for i in range(num_commands):
         print(command + " in line " + str(i+2) + " is not a valid command!")
         valid_solution = False
 
-    if valid_solution:
-        for r in range(rows):
-            for c in range(columns):
-                if not image[r][c] == painted_image[r][c]:
-                    valid_solution = False
+if valid_solution:
+    for r in range(rows):
+        for c in range(columns):
+            if not image[r][c] == painted_image[r][c]:
+                valid_solution = False
 
-    if valid_solution:
-        print("The solution is valid and has a score of " + str(num_pixels - num_commands))
-    else:
-        print("The solution is not valid.")
+if valid_solution:
+    print("The solution is valid and has a score of " + str(num_pixels - num_commands))
+else:
+    print("The solution is not valid.")
