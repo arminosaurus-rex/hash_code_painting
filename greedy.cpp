@@ -28,9 +28,10 @@ int max_d(int x, int y) {
 }
 
 void fill_commands() {
+  cout << "Filling commands" << endl;
   for (int x = 0; x < r; ++x) {
     for (int y = 0; y < c; ++y) {
-      for (int d = 0; d < max_d(x, y); ++d) {
+      for (int d = 0; d <= max_d(x, y); ++d) {
 	all_commands.push_back({CommandType::Square, x, y, d, 0});
       }
     }
@@ -61,14 +62,19 @@ void fill_commands() {
 
 typedef vector<vector<bool> > Picture;
 
+int Diff2Vals(bool lhs, bool rhs) {
+      if (lhs == false && rhs == true)
+	return 1;
+      else if (lhs == true && rhs == false)
+	return penalty;
+      return 0;
+}
+
 int Diff(const Picture& src, const Picture& target) {
   int delta = 0;
   for (int x = 0; x < r; ++x) {
     for (int y = 0; y < c; ++y) {
-      if (src[x][y] == false && target[x][y] == true)
-	delta += 1;
-      else if (src[x][y] == true && target[x][y] == false)
-	delta += penalty;
+      delta += Diff2Vals(src[x][y], target[x][y]);
     }
   }
   return delta;
@@ -97,6 +103,34 @@ Picture Apply(const Picture& in, Command cmd) {
   return out;
 }
 
+int ExpectDiff(const Picture& src, const Picture& tgt, Command cmd) {
+  int delta = 0;
+  switch (cmd.type) {
+  case CommandType::Square:
+    for (int x = cmd.arg1 - cmd.arg3; x <= cmd.arg1 + cmd.arg3; ++x) {
+      for (int y = cmd.arg2 - cmd.arg3; y <= cmd.arg2 + cmd.arg3; ++y) {
+	delta += Diff2Vals(true, tgt[x][y]);
+	delta -= Diff2Vals(src[x][y], tgt[x][y]);
+      }
+    }
+    break;
+  case CommandType::Line:
+    for (int x = cmd.arg1; x <= cmd.arg3; ++x) {
+      for (int y = cmd.arg2; y <= cmd.arg4; ++y) {
+	delta += Diff2Vals(true, tgt[x][y]);
+	delta -= Diff2Vals(src[x][y], tgt[x][y]);
+      }
+    }
+    break;
+  case CommandType::Delete:
+    int x = cmd.arg1;
+    int y = cmd.arg2;
+    delta += Diff2Vals(false, tgt[x][y]);
+    delta -= Diff2Vals(src[x][y], tgt[x][y]);
+  }
+  return delta;
+}
+
 Picture Empty() {
   Picture picture;
   picture.resize(r);
@@ -113,10 +147,10 @@ vector<Command> Greedy(const Picture& target) {
     Command best_try = all_commands[0];
     int lowest_delta = 1 << 28;
 
-    //    cout << "New iteration. Delta = " << Diff(cur, target) << endl;
+    cout << "Delta = " << Diff(cur, target) << endl;
 
     for (int i = 0; i < all_commands.size(); ++i) {
-      int delta = Diff(Apply(cur, all_commands[i]), target);
+      int delta = ExpectDiff(cur, target, all_commands[i]);
       if (delta < lowest_delta) {
 	lowest_delta = delta;
 	best_try = all_commands[i];
@@ -131,7 +165,7 @@ vector<Command> Greedy(const Picture& target) {
 void print_output(const vector<Command>& cmds) {
   cout << cmds.size() << endl;
   for (int i = 0; i < cmds.size(); ++i) {
-    Command cmd = all_commands[i];
+    Command cmd = cmds[i];
     switch (cmd.type) {
     case CommandType::Square:
       cout << "PAINT_SQUARE "
